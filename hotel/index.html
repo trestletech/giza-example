@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // To lower the complexity of the example, we'll reinvent a poor man's 
+    // data-binding. Obviously, something like this would be much more easily 
+    // accomplished Angular/Ember/etc.
+
+    var hotelPath = '/hotel1';
+
+    var socket = io.connect('http://localhost');
+    socket.on('connect', function () {
+      socket.emit('get', '/hotel1' );
+    });
+    socket.on(hotelPath, function(){
+      if ($('#floors h2').length === 0){
+        // Nothing's been added yet. Create from scratch.
+        var floors = $('#floors');      
+
+        var data = arguments[0];
+
+        for (var floorKey in data) {
+          if (floorKey.match(/^\//)){
+            // Start with a slash, must be a child (floor).
+            var floorPath = hotelPath + floorKey;
+            
+            var floorNode = floors.append("<h2 data-path=\""+floorPath+"\">Floor " 
+              + floorKey + "</h2>");
+            var floor = data[floorKey];
+
+            for (var roomKey in floor){
+              var room = floor[roomKey];  
+              var roomPath = floorPath + roomKey;
+
+              floorNode.append('<div data-path="'+roomPath+'" class="hotel-room">' + 
+                getInnerHtml(roomPath, room.commonNumber, room.occupied) + '</div>');
+            }  
+          } else if (floorKey === 'vacancies'){
+            var vacancy = data['vacancies'];
+            $('#vacancy').html(vacancy ? 'Vacancy' : 'No Vacancy');
+          } else{
+            // Some other child object. Ignore.
+            console.log(floorKey);
+          }          
+        }      
+      } else{
+        // Got some data but have already seeded everything, look for updates.
+        var event = arguments[0],
+          source = arguments[1],
+          type = arguments[2],
+          oldObj = arguments[3];
+
+        if (event === 'update' && type === 'room'){
+          $('.hotel-room').each(function(i, room){
+            if ($(room).data('path') === source.path){
+              $(room).html(getInnerHtml(source.path, source.obj.commonNumber,
+                source.obj.occupied));
+            }
+          });
+        } else {
+          console.log(arguments);
+
+        }
+      }
+    });
+
+  function getInnerHtml(roomPath, commonNumber, occupied){
+    return '<p>' + 
+      commonNumber + ": " + 
+      '<label><input type="checkbox" disabled="disabled" ' + 
+      'name="'+roomPath+'" value="'+roomPath+'" '+ 
+      (occupied?'checked':'') +'>Occupied</label></p>';
+  }
+
+  </script>
+
+  <style type="text/css">
+    #vacancy {
+      float: right;
+      font-size: 18px;
+    }    
+  </style>
+</head>
+<body>
+  <div id="vacancy">?</div>
+  <h1>Hotel1</h1>
+
+  <div id="floors">
+
+  </div>
+</body>
+</html>
