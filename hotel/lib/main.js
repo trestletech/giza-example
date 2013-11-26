@@ -1,4 +1,4 @@
-var Giza = require('giza');
+var Giza = require('giza').Giza;
 var app = require('http').createServer(handler)
   , io = require('socket.io').listen(app)
   , fs = require('fs')
@@ -14,6 +14,7 @@ giza.addTrigger('/hotel1', 'vacancies', function(event, source, type, oldVal){
     vacancies = root.vacancies;
   }
   if (event === 'create' && type === 'room'){
+    var room = source.obj;
     if (!room.occupied){
       // A new room was created and it's empty.
       return vacancies+1;
@@ -26,8 +27,13 @@ giza.addTrigger('/hotel1', 'vacancies', function(event, source, type, oldVal){
       return vacancies-1;
     } else if (oldVal.occupied === true && source.obj.occupied === false){
       return vacancies+1;
+    } else{
+      // return unaltered.
+      return vacancies;
     }
   }
+  // Not interested in this event, just return the incoming data.
+  return vacancies;
 });
 
 // Seed Giza with some initial data.

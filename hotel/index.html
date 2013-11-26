@@ -40,7 +40,7 @@
             }  
           } else if (floorKey === 'vacancies'){
             var vacancy = data['vacancies'];
-            $('#vacancy').html(vacancy ? 'Vacancy' : 'No Vacancy');
+            updateVacancy(vacancy);
           } else{
             // Some other child object. Ignore.
             console.log(floorKey);
@@ -60,12 +60,18 @@
                 source.obj.occupied));
             }
           });
+        } else if (event === 'vacancies') {
+          updateVacancy(source.obj.vacancies);
         } else {
           console.log(arguments);
 
         }
       }
     });
+
+  function updateVacancy(vacancy){
+    $('#vacancy').html(vacancy ? 'Vacancy (' + vacancy + ')' : 'No Vacancy');
+  }
 
   function getInnerHtml(roomPath, commonNumber, occupied){
     return '<p>' + 
